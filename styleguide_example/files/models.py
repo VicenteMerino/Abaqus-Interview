@@ -1,13 +1,13 @@
 from django.conf import settings
 from django.db import models
 
-from styleguide_example.common.models import BaseModel
+from styleguide_example.common.models import BaseModel2
 from styleguide_example.files.enums import FileUploadStorage
 from styleguide_example.files.utils import file_generate_upload_path
 from styleguide_example.users.models import BaseUser
 
 
-class File(BaseModel):
+class File(BaseModel2):
     file = models.FileField(upload_to=file_generate_upload_path, blank=True, null=True)
 
     original_file_name = models.TextField()

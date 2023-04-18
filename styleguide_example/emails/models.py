@@ -1,9 +1,9 @@
 from django.db import models
 
-from styleguide_example.common.models import BaseModel
+from styleguide_example.common.models import BaseModel2
 
 
-class Email(BaseModel):
+class Email(BaseModel2):
     class Status(models.TextChoices):
         READY = "READY", "Ready"
         SENDING = "SENDING", "Sending"

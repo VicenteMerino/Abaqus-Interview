@@ -5,7 +5,7 @@ from django.contrib.auth.models import BaseUserManager as BUM
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
-from styleguide_example.common.models import BaseModel
+from styleguide_example.common.models import BaseModel2
 
 # Taken from here:
 # https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#a-full-example
@@ -43,7 +43,7 @@ class BaseUserManager(BUM):
         return user
 
 
-class BaseUser(BaseModel, AbstractBaseUser, PermissionsMixin):
+class BaseUser(BaseModel2, AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
         verbose_name="email address",
         max_length=255,
