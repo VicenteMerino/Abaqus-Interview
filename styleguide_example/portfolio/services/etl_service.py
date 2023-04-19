@@ -3,7 +3,7 @@ import os
 from django.db import transaction
 from openpyxl import load_workbook
 
-from styleguide_example.portfolio.models import Asset, Portfolio, Price, Weight
+from styleguide_example.portfolio.models import Asset, Portfolio, PortfolioAsset, AssetPrice
 
 
 class ETLService:
@@ -15,78 +15,84 @@ class ETLService:
     def __init__(self, file):
         self.file = file
         self.workbook = load_workbook(file)
-        self.assets = []
-        self.weights = []
-        self.prices = []
+        self.weights_worksheet = self.workbook["weights"]
+        self.prices_worksheet = self.workbook["Precios"]
+        self.assets_dict = {}
+        self.portfolios_list = []
 
     def _is_valid_path(self):
-        return os.path.exists(self.file) and self.file.endswith(".xlsx")
+        return os.path.exists(self.file) and (
+            self.file.endswith(".xlsx") or self.file.endswith(".xls")
+        )
+
+    def _extract_portfolios(self):
+        portfolios = []
+        for col in self.weights_worksheet.iter_cols(min_col=3):
+            name = col[0].value
+            if name is None:
+                continue
+            portfolios.append(Portfolio(name=name))
+        portfolios_objs = Portfolio.objects.bulk_create(portfolios)
+        self.portfolios_list.extend(portfolios_objs)
+        for portfolio in portfolios_objs:
+            print(f"Created portfolio {portfolio}")
 
     def _extract_assets(self):
-        weights_worksheet = self.workbook["weights"]
-        for row in weights_worksheet.iter_rows(min_row=2):
+        assets = []
+        for row in self.weights_worksheet.iter_rows(min_row=2):
             asset_name = row[1].value
             if asset_name is None:
                 continue
-            self.assets.append(Asset(name=asset_name))
-        Asset.objects.bulk_create(self.assets)
+            assets.append(Asset(name=asset_name))
+        assets_objs = Asset.objects.bulk_create(assets)
+        for asset in assets_objs:
+            print(f"Created asset {asset}")
+            self.assets_dict[asset.name] = asset
 
     def _extract_weights(self):
-        weights_worksheet = self.workbook["weights"]
-        portfolio_1 = Portfolio.objects.get(name="Portfolio 1")
-        portfolio_2 = Portfolio.objects.get(name="Portfolio 2")
-        for row in weights_worksheet.iter_rows(min_row=2):
+        portfolio_assets = []
+        for row in self.weights_worksheet.iter_rows(min_row=2):
             date = row[0].value
             if date is None:
                 continue
-            asset = Asset.objects.get(name=row[1].value)
-            portfolio_1_weight = row[2].value
-            portfolio_2_weight = row[3].value
-            self.weights.append(
-                Weight(
-                    date=date,
-                    portfolio=portfolio_1,
-                    asset=asset,
-                    value=portfolio_1_weight,
+            asset = self.assets_dict[row[1].value]
+            for i, portfolio in enumerate(self.portfolios_list):
+                weight = row[i + 2].value
+                portfolio_assets.append(
+                    PortfolioAsset(portfolio=portfolio, asset=asset, date=date, weight=weight)
                 )
+        portfolio_assets_objs = PortfolioAsset.objects.bulk_create(portfolio_assets)
+        for portfolio_asset in portfolio_assets_objs:
+            print(
+                f"Created portfolio asset for {portfolio_asset} with weight {portfolio_asset.weight}"
             )
-            self.weights.append(
-                Weight(
-                    date=date,
-                    portfolio=portfolio_2,
-                    asset=asset,
-                    value=portfolio_2_weight,
-                )
-            )
-        Weight.objects.bulk_create(self.weights)
 
     def _extract_prices(self):
-        prices_worksheet = self.workbook["Precios"]
-        assets = []
+        column_names = [
+            cell.value for cell in self.prices_worksheet[1][1:] if cell.value is not None
+        ]
+        asset_prices = []
 
-        for cell in prices_worksheet[1][1:]:
-            if cell.value is None:
-                continue
-            assets.append(Asset.objects.get(name=cell.value))
-        for row in prices_worksheet.iter_rows(min_row=2):
-            if row[0].value is None:
-                continue
+        for row in self.prices_worksheet.iter_rows(min_row=2):
             date = row[0].value
-            for i, cell in enumerate(row[1:]):
-                self.prices.append(
-                    Price(
-                        date=date,
-                        asset=assets[i],
-                        value=cell.value,
-                    )
+            if date is None:
+                continue
+            for i, column_name in enumerate(column_names):
+                asset_name = column_name
+                price = row[i + 1].value
+                asset_prices.append(
+                    AssetPrice(asset=self.assets_dict[asset_name], date=date, value=price)
                 )
-        Price.objects.bulk_create(self.prices)
+        asset_prices_obj = AssetPrice.objects.bulk_create(asset_prices)
+        for asset_price in asset_prices_obj:
+            print(f"Created asset price for {asset_price} with value {asset_price.value}")
 
     @transaction.atomic
     def extract(self):
         if not self._is_valid_path():
             raise FileNotFoundError("File not found")
-        
+
+        self._extract_portfolios()
         self._extract_assets()
         self._extract_weights()
         self._extract_prices()
