@@ -142,6 +142,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = "users.BaseUser"
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
