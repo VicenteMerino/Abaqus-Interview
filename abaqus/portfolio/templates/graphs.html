@@ -1,0 +1,7 @@
+{% extends 'base.html' %} {% block content %}
+
+<form method="GET" action="{% url 'graphs' %}">
+  {{ form.as_p }}
+  <button type="submit">Submit</button>
+</form>
+{{ line_chart|safe }} {{ stacked_area_chart|safe }} {% endblock %}
