@@ -18,8 +18,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from abaqus.portfolio.views import line_chart
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(("abaqus.api.urls", "api"))),
+    path("line-chart/", line_chart, name="line_chart"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
