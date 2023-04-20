@@ -13,6 +13,8 @@ class Portfolio(BaseModel):
     name = models.CharField(max_length=100, unique=True)
     assets = models.ManyToManyField(Asset, related_name="portfolios", through="PortfolioAsset")
 
+    def __str__(self):
+        return self.name
 
 class PortfolioValue(BaseModel):
     portfolio = models.ForeignKey(

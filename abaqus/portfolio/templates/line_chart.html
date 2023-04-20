@@ -1,1 +1,7 @@
-{% extends 'base.html' %} {% block content %} {{ chart|safe }} {% endblock %}
+{% extends 'base.html' %} {% block content %}
+
+<form method="GET" action="{% url 'line_chart' %}">
+  {{ form.as_p }}
+  <button type="submit">Submit</button>
+</form>
+{{ chart|safe }} {% endblock %}
