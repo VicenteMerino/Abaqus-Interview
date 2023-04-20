@@ -1,9 +1,0 @@
-from django.urls import include, path
-
-urlpatterns = [
-    path("auth/", include(("styleguide_example.authentication.urls", "authentication"))),
-    path("users/", include(("styleguide_example.users.urls", "users"))),
-    path("errors/", include(("styleguide_example.errors.urls", "errors"))),
-    path("files/", include(("styleguide_example.files.urls", "files"))),
-    path("portfolio/", include(("styleguide_example.portfolio.urls", "portfolio"))),
-]

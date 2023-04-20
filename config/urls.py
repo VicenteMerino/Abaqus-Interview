@@ -1,4 +1,4 @@
-"""styleguide_example URL Configuration
+"""abaqus URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.0/topics/http/urls/
@@ -20,9 +20,6 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include(("styleguide_example.api.urls", "api"))),
+    path("api/", include(("abaqus.api.urls", "api"))),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-from config.settings.debug_toolbar.setup import DebugToolbarSetup  # noqa
-
-urlpatterns = DebugToolbarSetup.do_urls(urlpatterns)

@@ -228,7 +228,7 @@ Since cookies can be somewhat elusive, check the following urls:
 
 ## Example List API
 
-You can find the `UserListApi` in [`styleguide_example/users/apis.py`](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/users/apis.py#L12)
+You can find the `UserListApi` in [`abaqus/users/apis.py`](https://github.com/HackSoftware/Styleguide-Example/blob/master/abaqus/users/apis.py#L12)
 
 List API is located at:
 
@@ -295,13 +295,13 @@ If you want to recreate your database, you can use the bootstrap script:
 To start Celery:
 
 ```
-celery -A styleguide_example.tasks worker -l info --without-gossip --without-mingle --without-heartbeat
+celery -A abaqus.tasks worker -l info --without-gossip --without-mingle --without-heartbeat
 ```
 
 To start Celery Beat:
 
 ```
-celery -A styleguide_example.tasks beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+celery -A abaqus.tasks beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 ```
 
 ## Helpful commands for local development with `docker compose`
