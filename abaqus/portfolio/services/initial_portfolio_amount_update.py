@@ -1,4 +1,4 @@
-from django.db.models import Case, DecimalField, F, Sum, When
+from django.db.models import Case, FloatField, F, Sum, When
 
 from abaqus.portfolio.constants import (
     INITIAL_DATE,
@@ -16,7 +16,7 @@ def initial_portfolio_amount_update():
                     then=F("asset__prices__value"),
                 ),
                 default=0,
-                output_field=DecimalField(),
+                output_field=FloatField(),
             )
         )
     )

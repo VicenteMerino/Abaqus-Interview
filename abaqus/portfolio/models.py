@@ -16,12 +16,13 @@ class Portfolio(BaseModel):
     def __str__(self):
         return self.name
 
+
 class PortfolioValue(BaseModel):
     portfolio = models.ForeignKey(
         Portfolio, on_delete=models.CASCADE, related_name="portfolio_values"
     )
     date = models.DateField()
-    value = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    value = models.FloatField(default=0)
 
     def __str__(self):
         return f"{self.portfolio.name} - {self.date} - {self.value}"
@@ -35,8 +36,8 @@ class PortfolioAsset(BaseModel):
         Portfolio, on_delete=models.CASCADE, related_name="portfolio_assets"
     )
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name="portfolio_assets")
-    amount = models.DecimalField(max_digits=20, decimal_places=2, default=0)
-    weight = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    amount = models.FloatField(default=0)
+    weight = models.FloatField(default=0)
     date = models.DateField()
 
     def __str__(self):
@@ -49,7 +50,7 @@ class PortfolioAsset(BaseModel):
 class AssetPrice(BaseModel):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name="prices")
     date = models.DateField()
-    value = models.DecimalField(max_digits=20, decimal_places=2)
+    value = models.FloatField()
 
     def __str__(self):
         return f"{self.asset.name} - {self.date}"

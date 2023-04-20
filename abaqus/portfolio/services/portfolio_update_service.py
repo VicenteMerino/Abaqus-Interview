@@ -1,5 +1,5 @@
 from collections import defaultdict
-from django.db.models import OuterRef, Subquery, F, Sum, Case, DecimalField, When, ExpressionWrapper
+from django.db.models import OuterRef, Subquery, F, Sum, Case, FloatField, When, ExpressionWrapper
 
 from abaqus.portfolio.constants import (
     INITIAL_DATE,
@@ -32,11 +32,11 @@ class PortfolioUpdateService:
                             then=F("asset__prices__value"),
                         ),
                         default=0,
-                        output_field=DecimalField(),
+                        output_field=FloatField(),
                     )
                 ),
                 asset_valuation=ExpressionWrapper(
-                    F("amount") * F("price"), output_field=DecimalField()
+                    F("amount") * F("price"), output_field=FloatField()
                 ),
             )
         ).values("portfolio_id", "date", "asset_valuation")
@@ -57,27 +57,23 @@ class PortfolioUpdateService:
 
     @classmethod
     def update_weight(cls):
-        portfolio_assets = (
-            PortfolioAsset.objects.all().annotate(
-                price=Sum(
-                    Case(
-                        When(
-                            asset__prices__date=F("date"),
-                            then=F("asset__prices__value"),
-                        ),
-                        default=0,
-                        output_field=DecimalField(),
-                    )
-                ),
-                asset_valuation=ExpressionWrapper(
-                    F("amount") * F("price"), output_field=DecimalField()
-                ),
-                portfolio_valuation=Subquery(
-                    PortfolioValue.objects.filter(
-                        portfolio_id=OuterRef("portfolio_id"), date=OuterRef("date")
-                    ).values("value")[:1]
-                ),
-            )
+        portfolio_assets = PortfolioAsset.objects.all().annotate(
+            price=Sum(
+                Case(
+                    When(
+                        asset__prices__date=F("date"),
+                        then=F("asset__prices__value"),
+                    ),
+                    default=0,
+                    output_field=FloatField(),
+                )
+            ),
+            asset_valuation=ExpressionWrapper(F("amount") * F("price"), output_field=FloatField()),
+            portfolio_valuation=Subquery(
+                PortfolioValue.objects.filter(
+                    portfolio_id=OuterRef("portfolio_id"), date=OuterRef("date")
+                ).values("value")[:1]
+            ),
         )
 
         for portfolio_asset in portfolio_assets:
@@ -88,4 +84,3 @@ class PortfolioUpdateService:
             )
             portfolio_asset.save()
         logging.info("Portfolio weight updated")
-

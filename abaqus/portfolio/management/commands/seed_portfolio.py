@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file = options["file"]
-        ETLService(file).extract()
+        ETLService(file).extract().transform().load()
         initial_portfolio_amount_update()
         PortfolioUpdateService.update_amount()
         PortfolioUpdateService.update_value()
