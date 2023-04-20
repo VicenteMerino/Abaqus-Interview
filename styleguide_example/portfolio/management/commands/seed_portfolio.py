@@ -1,6 +1,10 @@
 from django.core.management.base import BaseCommand
 
-from styleguide_example.portfolio.services import ETLService, initial_portfolio_amount_update
+from styleguide_example.portfolio.services import (
+    ETLService,
+    PortfolioUpdateService,
+    initial_portfolio_amount_update,
+)
 
 
 class Command(BaseCommand):
@@ -13,3 +17,6 @@ class Command(BaseCommand):
         file = options["file"]
         ETLService(file).extract()
         initial_portfolio_amount_update()
+        PortfolioUpdateService.update_amount()
+        PortfolioUpdateService.update_value()
+        PortfolioUpdateService.update_weight()

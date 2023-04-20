@@ -13,8 +13,19 @@ class Portfolio(BaseModel):
     name = models.CharField(max_length=100, unique=True)
     assets = models.ManyToManyField(Asset, related_name="portfolios", through="PortfolioAsset")
 
+
+class PortfolioValue(BaseModel):
+    portfolio = models.ForeignKey(
+        Portfolio, on_delete=models.CASCADE, related_name="portfolio_values"
+    )
+    date = models.DateField()
+    value = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+
     def __str__(self):
-        return self.name
+        return f"{self.portfolio.name} - {self.date} - {self.value}"
+
+    class Meta:
+        unique_together = ("portfolio", "date")
 
 
 class PortfolioAsset(BaseModel):
@@ -23,7 +34,7 @@ class PortfolioAsset(BaseModel):
     )
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name="portfolio_assets")
     amount = models.DecimalField(max_digits=20, decimal_places=2, default=0)
-    weight = models.DecimalField(max_digits=10, decimal_places=4)
+    weight = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     date = models.DateField()
 
     def __str__(self):

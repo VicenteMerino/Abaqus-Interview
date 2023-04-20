@@ -2,8 +2,10 @@ import os
 
 from django.db import transaction
 from openpyxl import load_workbook
-
+from logging import getLogger
 from styleguide_example.portfolio.models import Asset, Portfolio, PortfolioAsset, AssetPrice
+
+logger = getLogger(__name__)
 
 
 class ETLService:
@@ -35,7 +37,7 @@ class ETLService:
         portfolios_objs = Portfolio.objects.bulk_create(portfolios)
         self.portfolios_list.extend(portfolios_objs)
         for portfolio in portfolios_objs:
-            print(f"Created portfolio {portfolio}")
+            logger.info(f"Created portfolio {portfolio}")
 
     def _extract_assets(self):
         assets = []
@@ -46,7 +48,7 @@ class ETLService:
             assets.append(Asset(name=asset_name))
         assets_objs = Asset.objects.bulk_create(assets)
         for asset in assets_objs:
-            print(f"Created asset {asset}")
+            logger.info(f"Created asset {asset}")
             self.assets_dict[asset.name] = asset
 
     def _extract_weights(self):
@@ -63,7 +65,7 @@ class ETLService:
                 )
         portfolio_assets_objs = PortfolioAsset.objects.bulk_create(portfolio_assets)
         for portfolio_asset in portfolio_assets_objs:
-            print(
+            logger.info(
                 f"Created portfolio asset for {portfolio_asset} with weight {portfolio_asset.weight}"
             )
 
@@ -85,14 +87,40 @@ class ETLService:
                 )
         asset_prices_obj = AssetPrice.objects.bulk_create(asset_prices)
         for asset_price in asset_prices_obj:
-            print(f"Created asset price for {asset_price} with value {asset_price.value}")
+            logger.info(f"Created asset price for {asset_price}")
+
+    def _load_missing_portfolio_assets(self):
+        current_portfolio_dates = PortfolioAsset.objects.values_list("date", flat=True).distinct(
+            "date"
+        )
+        missing_portfolio_dates = (
+            AssetPrice.objects.exclude(date__in=current_portfolio_dates)
+            .values_list("date", flat=True)
+            .distinct("date")
+        )
+
+        missing_portfolio_assets = []
+        for date in missing_portfolio_dates:
+            for portfolio in self.portfolios_list:
+                for asset in self.assets_dict.values():
+                    missing_portfolio_assets.append(
+                        PortfolioAsset(portfolio=portfolio, asset=asset, date=date)
+                    )
+        portfolio_assets_objs = PortfolioAsset.objects.bulk_create(missing_portfolio_assets)
+        for portfolio_asset in portfolio_assets_objs:
+            logger.info(f"Created portfolio asset for {portfolio_asset}")
 
     @transaction.atomic
     def extract(self):
         if not self._is_valid_path():
             raise FileNotFoundError("File not found")
 
-        self._extract_portfolios()
-        self._extract_assets()
-        self._extract_weights()
-        self._extract_prices()
+        if PortfolioAsset.objects.exists():
+            logger.warning("Initial data already exists in the database")
+        else:
+            self._extract_portfolios()
+            self._extract_assets()
+            self._extract_weights()
+            self._extract_prices()
+            self._load_missing_portfolio_assets()
+            logger.info("Finished extracting and loading data")
